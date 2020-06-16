@@ -1,5 +1,8 @@
 Python API and Evaluation Code for v2.0 and v1.0 releases of the VQA dataset.
 ===================
+## Forker version ##
+This version is Python 3 compatible and it can be installed via pip.
+
 ## VQA v2.0 release ##
 This release consists of
 - Real 
