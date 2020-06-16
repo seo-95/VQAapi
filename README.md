@@ -35,8 +35,8 @@ There are two types of tasks
 
 ## Setup ##
 ```
-git clone git@github.com:seo-95/VQA.git
-cd VQA/
+git clone git@github.com:seo-95/VQAapi.git
+cd VQAapi/
 pip install .
 ```
 
