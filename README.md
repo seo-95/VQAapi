@@ -26,9 +26,16 @@ There are two types of tasks
 - Multiple-choice task (18 choices per question)
 
 ## Requirements ##
-- python 2.7
+- python 3.5+
 - scikit-image (visit [this page](http://scikit-image.org/docs/dev/install.html) for installation)
 - matplotlib (visit [this page](http://matplotlib.org/users/installing.html) for installation)
+
+## Setup ##
+```
+git clone git@github.com:seo-95/VQA.git
+cd VQA/
+pip install .
+```
 
 ## Files ##
 ./Questions
