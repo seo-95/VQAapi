@@ -1,2 +1,9 @@
 *.pyc
 *.swp*
+
+
+# VScode folders
+.vscode
+
+# Python venvs
+Pipfile

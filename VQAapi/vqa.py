@@ -25,6 +25,7 @@ class VQA:
         """
            Constructor of VQA helper class for reading and visualizing questions and answers.
         :param annotation_file (str): location of VQA annotation file
+        :param question_file (str): location of VQA question file
         :return:
         """
         # load dataset
