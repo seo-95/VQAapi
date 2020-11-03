@@ -21,63 +21,99 @@ import datetime
 import copy
 
 class VQA:
-    def __init__(self, annotation_file=None, question_file=None):
+    def __init__(self, question_file, annotation_file=None, test_mode=False):
+        """Constructor of VQA helper class for reading and visualizing questions and answers.
+
+        Args:
+            question_file (str): location of VQA question file
+            annotation_file (str, optional): location of VQA annotation file. Defaults to None.
+            test_mode (bool, optional): set to True to avoid loading annotations. Defaults to False.
         """
-           Constructor of VQA helper class for reading and visualizing questions and answers.
-        :param annotation_file (str): location of VQA annotation file
-        :param question_file (str): location of VQA question file
-        :return:
-        """
+        if not annotation_file:
+            assert test_mode, 'No annotation file specified and test_mode is False'
+        assert question_file is not None, 'Question file not specified'
         # load dataset
-        self.dataset = {}
-        self.questions = {}
-        self.qa = {}
-        self.qqa = {}
-        self.imgToQA = {}
-        if not annotation_file == None and not question_file == None:
+        self.dataset    = {}
+        self.questions  = {}
+        self.qa         = {}
+        self.qqa        = {}
+        self.imgToQA    = {}
+        self.test_mode  = test_mode
+
+        time_t = datetime.datetime.utcnow()
+        if not self.test_mode:
             print('loading VQA annotations and questions into memory...')
-            time_t = datetime.datetime.utcnow()
             dataset = json.load(open(annotation_file, 'r'))
-            questions = json.load(open(question_file, 'r'))
-            print(datetime.datetime.utcnow() - time_t)
-            self.dataset = dataset
-            self.questions = questions
-            self.createIndex()
+        else:
+            print('test mode: loading only VQA questions into memory...')
+            dataset = None
+        questions       = json.load(open(question_file, 'r'))
+        print(datetime.datetime.utcnow() - time_t)
+
+        self.dataset    = dataset
+        self.questions  = questions
+        self.createIndex()
+
 
     def createIndex(self):
         # create index
         print('creating index...')
-        imgToQA = {ann['image_id']: [] for ann in self.dataset['annotations']}
-        qa =  {ann['question_id']:       [] for ann in self.dataset['annotations']}
-        qqa = {ann['question_id']:       [] for ann in self.dataset['annotations']}
-        for ann in self.dataset['annotations']:
-            imgToQA[ann['image_id']] += [ann]
-            qa[ann['question_id']] = ann
-        for ques in self.questions['questions']:
-            qqa[ques['question_id']] = ques
-        print('index created!')
+        if not self.test_mode:
+            imgToQA = {ann['image_id']:     [] for ann in self.dataset['annotations']}
+            qa      = {ann['question_id']:  [] for ann in self.dataset['annotations']}
+            qqa     = {ann['question_id']:  [] for ann in self.dataset['annotations']}
+            for ann in self.dataset['annotations']:
+                imgToQA[ann['image_id']]    += [ann]
+                qa[ann['question_id']]      = ann
+            for ques in self.questions['questions']:
+                qqa[ques['question_id']]    = ques
 
-         # create class members
-        self.qa = qa
-        self.qqa = qqa
-        self.imgToQA = imgToQA
+            print('index created!')
+            # create class members
+            self.qa = qa
+            self.qqa = qqa
+            self.imgToQA = imgToQA
+        else:
+            imgToQA = {ann['image_id']:     [] for ann in self.questions['questions']}
+            qa      = {ann['question_id']:  [] for ann in self.questions['questions']}
+            qqa     = {ann['question_id']:  [] for ann in self.questions['questions']}
+            for quest in self.questions['questions']:
+                imgToQA[quest['image_id']]  += [quest]
+                qa[quest['question_id']]    = quest
+            for quest in self.questions['questions']:
+                qqa[quest['question_id']]   = quest
+
+            print('index created!')
+            # create class members
+            self.qa = qa
+            self.qqa = qqa
+            self.imgToQA = imgToQA            
+
 
     def info(self):
+        """Print information about the VQA annotation file.
         """
-        Print information about the VQA annotation file.
-        :return:
-        """
-        for key, value in self.datset['info'].items():
-            print('%s: %s'%(key, value))
+        info = self.dataset['info'] if self.test_mode else self.questions['info']
+        for key, value in info.items():
+            print('{}: {}'.format(key, value))
+
 
     def getQuesIds(self, imgIds=[], quesTypes=[], ansTypes=[]):
+        """Get question ids that satisfy given filter conditions. default skips that filter.
+
+        Args:
+            imgIds (list, optional):  get question ids for given imgs. Defaults to [].
+            quesTypes (list, optional): get question ids for given question types. Defaults to [].
+            ansTypes (list, optional): get question ids for given answer types. Defaults to [].
+
+        Raises:
+            NotImplementedError: [description]
+
+        Returns:
+            list: integer array of question ids
         """
-        Get question ids that satisfy given filter conditions. default skips that filter
-        :param     imgIds    (int array)   : get question ids for given imgs
-                quesTypes (str array)   : get question ids for given question types
-                ansTypes  (str array)   : get question ids for given answer types
-        :return:    ids   (int array)   : integer array of question ids
-        """
+        if self.test_mode:
+            raise NotImplementedError('Not available when test_mode=True')
         imgIds       = imgIds    if type(imgIds)    == list else [imgIds]
         quesTypes = quesTypes if type(quesTypes) == list else [quesTypes]
         ansTypes  = ansTypes  if type(ansTypes)  == list else [ansTypes]
@@ -94,14 +130,23 @@ class VQA:
         ids = [ann['question_id'] for ann in anns]
         return ids
 
+
     def getImgIds(self, quesIds=[], quesTypes=[], ansTypes=[]):
+        """Get image ids that satisfy given filter conditions. default skips that filter.
+
+        Args:
+            quesIds (list, optional): get image ids for given question ids. Defaults to [].
+            quesTypes (list, optional): get image ids for given question types. Defaults to [].
+            ansTypes (list, optional): get image ids for given answer types. Defaults to [].
+
+        Raises:
+            NotImplementedError: [description]
+
+        Returns:
+            list: integer array of image ids
         """
-        Get image ids that satisfy given filter conditions. default skips that filter
-        :param quesIds   (int array)   : get image ids for given question ids
-               quesTypes (str array)   : get image ids for given question types
-               ansTypes  (str array)   : get image ids for given answer types
-        :return: ids     (int array)   : integer array of image ids
-        """
+        if self.test_mode:
+            raise NotImplementedError('Not available when test_mode=True')
         quesIds   = quesIds   if type(quesIds)   == list else [quesIds]
         quesTypes = quesTypes if type(quesTypes) == list else [quesTypes]
         ansTypes  = ansTypes  if type(ansTypes)  == list else [ansTypes]
@@ -118,23 +163,39 @@ class VQA:
         ids = [ann['image_id'] for ann in anns]
         return ids
 
+
     def loadQA(self, ids=[]):
+        """Load questions and answers with the specified question ids.
+
+        Args:
+            ids (list, optional): integer ids specifying question ids. Defaults to [].
+
+        Raises:
+            NotImplementedError: [description]
+
+        Returns:
+            list: loaded qa objects
         """
-        Load questions and answers with the specified question ids.
-        :param ids (int array)       : integer ids specifying question ids
-        :return: qa (object array)   : loaded qa objects
-        """
+        if self.test_mode:
+            raise NotImplementedError('Not available when test_mode=True')
         if type(ids) == list:
             return [self.qa[id] for id in ids]
         elif type(ids) == int:
             return [self.qa[ids]]
 
+
     def showQA(self, anns):
+        """Display the specified annotations.
+
+        Args:
+            anns (list): annotations to display
+
+        Raises:
+            NotImplementedError: [description]
         """
-        Display the specified annotations.
-        :param anns (array of object): annotations to display
-        :return: None
-        """
+            
+        if self.test_mode:
+            raise NotImplementedError('Not available when test_mode=True')
         if len(anns) == 0:
             return 0
         for ann in anns:
@@ -143,12 +204,23 @@ class VQA:
             for ans in ann['answers']:
                 print("Answer %d: %s" %(ans['answer_id'], ans['answer']))
 
+
     def loadRes(self, resFile, quesFile):
+        #todo implement when test_mode=True
+        """Load result file and return a result object.
+
+        Args:
+            resFile (str): file name of result file
+            quesFile (str): file name of question file
+
+        Raises:
+            NotImplementedError: [description]
+
+        Returns:
+            obj: result api object
         """
-        Load result file and return a result object.
-        :param   resFile (str)     : file name of result file
-        :return: res (obj)         : result api object
-        """
+        if self.test_mode:
+            raise NotImplementedError('Not available when test_mode=True')
         res = VQA()
         res.questions = json.load(open(quesFile))
         res.dataset['info'] = copy.deepcopy(self.questions['info'])
