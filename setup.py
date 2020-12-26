@@ -4,9 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-     name='VQAapi',
+     name='VQAtools',
      version='0.1',
-     scripts=['VQAapi/vqa.py', 'VQAapi/vqaEval.py'] ,
      author="Matteo A. Senese",
      description="A VQA helper developed by"
                  "Aishwarya Agrawal and packaged by"
