@@ -65,14 +65,14 @@ class VQAEval:
                              '>', '<', '@', '`', ',', '?', '!']
 
 
-    def evaluate(self, quesIds=None):
+    def evaluate(self, quesIds=None, verbose=False):
         if quesIds == None:
             quesIds = [quesId for quesId in self.params['question_id']]
         gts = {}
         res = {}
         for quesId in quesIds:
-            gts[quesId] = self.vqa.qa[quesId]
-            res[quesId] = self.vqaRes.qa[quesId]
+            gts[quesId] = self.vqa.q2a[quesId]
+            res[quesId] = self.vqaRes.q2a[quesId]
 
         # =================================================
         # Compute accuracy
@@ -80,7 +80,8 @@ class VQAEval:
         accQA       = []
         accQuesType = {}
         accAnsType  = {}
-        print("computing accuracy")
+        if verbose:
+            print("computing accuracy")
         step = 0
         for quesId in quesIds:
             resAns      = res[quesId]['answer']
@@ -112,12 +113,16 @@ class VQAEval:
             self.setEvalQA(quesId, avgGTAcc)
             self.setEvalQuesType(quesId, quesType, avgGTAcc)
             self.setEvalAnsType(quesId, ansType, avgGTAcc)
-            if step%100 == 0:
+            if step%100 == 0 and verbose:
                 self.updateProgress(step/float(len(quesIds)))
             step = step + 1
 
         self.setAccuracy(accQA, accQuesType, accAnsType)
-        print("Done computing accuracy")
+        if verbose:
+            print("Done computing accuracy")
+        return {'overall': self.accuracy['overall'],
+                'perQuestionType': self.accuracy['perQuestionType'],
+                'perAnswerType': self.accuracy['perAnswerType']}
 
     def processPunctuation(self, inText):
         outText = inText
